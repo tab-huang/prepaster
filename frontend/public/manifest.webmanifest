@@ -1,0 +1,19 @@
+{
+  "name": "Crisis-to-Action",
+  "short_name": "Crisis",
+  "description": "What to do, right now — from exactly where you're standing.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fbfbfa",
+  "theme_color": "#fbfbfa",
+  "icons": [
+    {
+      "src": "/usaii/logo.png",
+      "sizes": "260x308",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

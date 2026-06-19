@@ -1,0 +1,138 @@
+/* Recover flow — hub, clean-up intake, and paperwork helper. Reuses the app's
+   base classes (.screen, .intake, .dropzone, .hazard-grid, .primary, …); this
+   file only adds the recover-specific pieces. Tokens from styles.css :root. */
+
+/* ── Hub ── */
+.rcv { max-width: 640px; margin: 0 auto; padding: 8px 0 40px; }
+.rcv-title { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); margin: 4px 0 6px; }
+.rcv-sub { color: var(--ink-soft); font-size: 14px; line-height: 1.5; margin: 0 0 22px; }
+
+.rcv-label {
+  font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--muted); margin: 18px 0 8px;
+}
+
+.rcv-cards { display: flex; flex-direction: column; gap: 12px; margin-top: 22px; }
+.rcv-card {
+  display: flex; align-items: center; gap: 14px; text-align: left;
+  padding: 16px 16px; background: var(--surface);
+  border: 1px solid var(--line-strong); border-radius: var(--radius);
+  cursor: pointer; transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
+  font-family: var(--sans); /* buttons don't inherit the body font */
+}
+.rcv-card:hover:not(:disabled) { border-color: var(--ink); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+.rcv-card:active:not(:disabled) { transform: translateY(1px); }
+.rcv-card:disabled { opacity: 0.5; cursor: not-allowed; }
+.rcv-card-icon {
+  flex: none; width: 44px; height: 44px; display: grid; place-items: center;
+  border-radius: 12px; background: var(--bg); color: var(--ink); border: 1px solid var(--line);
+}
+.rcv-card-body { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.rcv-card-title { font-size: 15px; font-weight: 600; color: var(--ink); }
+.rcv-card-sub { font-size: 13px; color: var(--ink-soft); line-height: 1.45; }
+.rcv-card-arrow { flex: none; color: var(--muted); }
+.rcv-hint { margin-top: 12px; font-size: 13px; color: var(--muted); text-align: center; }
+
+/* Hand-off card from the clean-up plan to the paperwork tool. */
+.rcv-card--handoff { margin-top: 18px; }
+
+/* ── Clean-up intake: damage chips + photo thumbs ── */
+.rcv-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.rcv-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 13px; font-size: 13px; font-weight: 500;
+  background: var(--surface); color: var(--ink-soft);
+  border: 1px solid var(--line-strong); border-radius: 999px; cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
+  font-family: var(--sans); /* buttons don't inherit the body font */
+}
+.rcv-chip:hover { border-color: var(--ink); color: var(--ink); }
+.rcv-chip.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+.rcv-thumbs { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; }
+.rcv-thumb { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line-strong); }
+
+/* ── Paperwork ── */
+.pw-doc { font-family: var(--mono); font-size: 13px; line-height: 1.5; }
+
+/* Document box with an upload button tucked in the bottom-right corner. */
+.doc-input-wrap { position: relative; }
+.doc-input-wrap .pw-doc { width: 100%; box-sizing: border-box; padding-right: 52px; }
+.doc-upload-btn {
+  position: absolute; right: 10px; bottom: 10px;
+  width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 9px; cursor: pointer;
+  color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line-strong);
+}
+.doc-upload-btn:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
+.doc-attached { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.doc-attached-label { font-size: 13px; color: var(--ink-soft); }
+
+/* Auto-redaction notice. */
+.pw-redacted {
+  font-size: 12.5px; line-height: 1.45; color: var(--ink-soft);
+  background: var(--amber-soft); border: 1px solid var(--amber);
+  border-radius: var(--radius-sm); padding: 9px 12px; margin: 0 0 12px;
+}
+.pw-row { display: flex; gap: 14px; margin-top: 6px; }
+.pw-field { flex: 1; min-width: 0; }
+.pw-field .text-input, .pw-doc { width: 100%; box-sizing: border-box; }
+
+.pw-error { margin-top: 12px; }
+.pw-findings {
+  margin: 6px 0 0; padding: 10px 14px; list-style: disc; padding-left: 30px;
+  background: var(--danger-soft); border: 1px solid var(--danger); border-radius: var(--radius-sm);
+  color: var(--danger); font-size: 13px;
+}
+
+.pw-result-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.pw-engine {
+  font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.05em;
+  padding: 3px 9px; border-radius: 999px; color: var(--muted);
+  background: var(--bg); border: 1px solid var(--line-strong);
+}
+.pw-engine--ai { color: var(--ink); background: var(--surface); border-color: var(--line-strong); }
+
+.pw-doctype { font-size: 14px; color: var(--ink); margin: 8px 0 16px; }
+.pw-doctype strong { font-weight: 650; }
+.pw-confidence { color: var(--muted); font-family: var(--mono); font-size: 12px; }
+
+/* Computed deadlines — date + days-remaining + colour-coded urgency. */
+.pw-deadlines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.pw-deadline {
+  padding: 11px 13px; background: var(--bg);
+  border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+  border-left: 3px solid var(--line-strong);
+}
+.pw-deadline-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pw-urg {
+  font-family: var(--mono); font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase; padding: 2px 7px; border-radius: 999px;
+  color: var(--muted); background: var(--surface); border: 1px solid var(--line-strong);
+}
+.pw-date { font-weight: 650; font-size: 13.5px; color: var(--ink); }
+.pw-days { font-size: 12.5px; color: var(--muted); }
+.pw-deadline-action { font-size: 13.5px; color: var(--ink); margin-top: 5px; font-weight: 550; }
+.pw-deadline-src { font-size: 12.5px; color: var(--ink-soft); line-height: 1.45; margin-top: 3px; }
+.pw-deadline:has(.pw-urg--urgent) { border-left-color: var(--danger); }
+.pw-urg--urgent { color: var(--danger); background: var(--danger-soft); border-color: var(--danger); }
+.pw-deadline:has(.pw-urg--upcoming) { border-left-color: var(--amber); }
+.pw-urg--upcoming { color: var(--amber); background: var(--amber-soft); border-color: var(--amber); }
+.pw-deadline:has(.pw-urg--later) { border-left-color: var(--blue); }
+.pw-urg--later { color: var(--blue); background: var(--blue-soft); border-color: var(--blue); }
+.pw-urg--passed { color: var(--muted); text-decoration: line-through; }
+
+.pw-section { margin: 0 0 16px; }
+.pw-section-head {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 7px;
+}
+.pw-list { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 5px; }
+.pw-list li { font-size: 14px; color: var(--ink-soft); line-height: 1.45; }
+.pw-summary { font-size: 14px; color: var(--ink-soft); line-height: 1.55; margin: 0; }
+.pw-note {
+  font-size: 12.5px; color: var(--ink-soft); line-height: 1.5;
+  background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius-sm);
+  padding: 12px 14px; margin: 8px 0 18px;
+}

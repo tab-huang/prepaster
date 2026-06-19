@@ -1,0 +1,32 @@
+# Claude Code / tooling
+.claude/
+.playwright-mcp/
+
+# Runtime caches — regenerated on first request
+backend/app/APIs/rag_monthly_cache.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Environment — never commit real keys
+.env
+.env.local
+.env.*.local
+
+# Frontend build output
+frontend/dist/
+frontend/node_modules/
+tabite/
+
+# Vite
+*.local
+
+# OS
+.DS_Store
+Thumbs.db
