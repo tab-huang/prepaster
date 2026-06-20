@@ -16,6 +16,9 @@ env/
 
 # Environment — never commit real keys
 .env
+
+# Deployment runbook contains live credentials — keep local only
+DEPLOYMENT.md
 .env.local
 .env.*.local
 
