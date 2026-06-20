@@ -1,12 +1,12 @@
-// Marketing landing page for Prepaster. Standalone - rendered before the app shell.
+// Marketing landing page for ProtectionIV. Standalone - rendered before the app shell.
 // Cinematic, scroll-told: a hero, a product overview, then one section per hazard
 // where a stylized SVG scene animates as it scrolls into view and reveals its text.
 //
 // The hazard scenes are pure SVG/CSS (no external/licensed media). Each scene has a
 // `.lp-stage` slot where a real green-screen video can later be dropped in to replace
-// the drawn animation. The "Launch Prepaster" button is always present in the header.
+// the drawn animation. The "Launch ProtectionIV" button is always present in the header.
 //
-// Bilingual: Prepaster's coverage is the US + officially-bilingual Canada, so the
+// Bilingual: ProtectionIV's coverage is the US + officially-bilingual Canada, so the
 // marketing page reads in English or French. The EN/FR toggle in the nav controls the
 // same session language as the app (lifted to App.jsx, persisted), so a francophone
 // visitor lands in French and stays in French straight into the plan.
@@ -147,12 +147,12 @@ const CONTENT = {
   en: {
     navCta: "Launch app",
     heroSub: "Turn a stressful disaster alert into a manageable plan.",
-    launch: "Launch Prepaster",
+    launch: "Launch ProtectionIV",
     seeHow: "See how it works",
     overviewTitle: (
       <>
         Currently, warnings tell you <em>that</em> something is coming.
-        Prepaster tells you <em>what to do</em> about it.
+        ProtectionIV tells you <em>what to do</em> about it.
       </>
     ),
     overviewBody:
@@ -167,7 +167,7 @@ const CONTENT = {
     hazards: [
       { id: "tornado", flip: false,
         title: "A tornado is on the ground.",
-        body: "No time to think. Prepaster puts you in the lowest, most interior room, walks the drop-and-cover sequence, and points to the nearest sturdy building if you can still reach it.",
+        body: "No time to think. ProtectionIV puts you in the lowest, most interior room, walks the drop-and-cover sequence, and points to the nearest sturdy building if you can still reach it.",
         action: "If it strikes: get to the lowest, most interior room and cover your head and neck. Never shelter under a highway overpass!" },
       { id: "wildfire", flip: true,
         title: "The fire is moving with the wind.",
@@ -175,7 +175,7 @@ const CONTENT = {
         action: "If it strikes: leave early and drive away from the smoke, never toward it, and follow official evacuation routes!" },
       { id: "flood", flip: false,
         title: "The water is rising fast.",
-        body: "Prepaster knows which way the ground actually rises from where you stand, finds higher floors or higher ground, and keeps you off flooded roads and creek crossings.",
+        body: "ProtectionIV knows which way the ground actually rises from where you stand, finds higher floors or higher ground, and keeps you off flooded roads and creek crossings.",
         action: "If it strikes: move to higher ground and never walk or drive through moving water, just six inches can sweep you off your feet!" },
       { id: "earthquake", flip: true,
         title: "The shaking won't stop.",
@@ -184,13 +184,13 @@ const CONTENT = {
     ],
     dataTitle: "Every plan is built on real data and official guidance.",
     dataIntro:
-      "Prepaster never improvises. The moment an alert fires, it reads live feeds at your " +
+      "ProtectionIV never improvises. The moment an alert fires, it reads live feeds at your " +
       "exact coordinates and grounds every critical instruction in the agencies that write " +
       "the rules. Here is exactly what it pulls, and what each source does.",
     block1: "Live data pulled",
     block2: "Official guidance reference",
     liveData: [
-      ["NWS (National Weather Service)", "Official US watches and warnings for floods, tornadoes, and severe weather, pulled with their exact warned-area polygon so Prepaster can tell whether you are actually standing inside the alert zone, not just nearby."],
+      ["NWS (National Weather Service)", "Official US watches and warnings for floods, tornadoes, and severe weather, pulled with their exact warned-area polygon so ProtectionIV can tell whether you are actually standing inside the alert zone, not just nearby."],
       ["Environment and Climate Change Canada", "The Canadian counterpart, providing live regional weather warnings for users north of the border, normalized into the same alert shape so the rest of the engine treats them identically."],
       ["USGS Earthquake Feed", "Real-time global earthquake detections (magnitude, epicentre, depth, and time), used to confirm a quake actually happened near you and to ground the plan in its real size and distance."],
       ["NASA FIRMS", "Satellite thermal detections of active fire, refreshed through the day, so the plan reacts to where flames are burning right now, not just where a fire was first reported hours ago."],
@@ -213,18 +213,18 @@ const CONTENT = {
     ],
     ctaTitle: "Know your next move before you need it.",
     ctaSub: "Turn a stressful alert into a manageable plan.",
-    foot: "Prepaster is a decision engine for the moment an alert fires. This demonstrates the engine, triggered by an alert you provide or simulate.",
+    foot: "ProtectionIV is a decision engine for the moment an alert fires. This demonstrates the engine, triggered by an alert you provide or simulate.",
   },
 
   fr: {
     navCta: "Lancer l'app",
     heroSub: "Transformez une alerte de catastrophe stressante en un plan gérable.",
-    launch: "Lancer Prepaster",
+    launch: "Lancer ProtectionIV",
     seeHow: "Voir comment ça marche",
     overviewTitle: (
       <>
         Aujourd'hui, les alertes vous disent <em>qu'un danger</em> approche.
-        Prepaster vous dit <em>quoi faire</em> face à lui.
+        ProtectionIV vous dit <em>quoi faire</em> face à lui.
       </>
     ),
     overviewBody:
@@ -240,7 +240,7 @@ const CONTENT = {
     hazards: [
       { id: "tornado", flip: false,
         title: "Une tornade touche le sol.",
-        body: "Aucun temps pour réfléchir. Prepaster vous place dans la pièce la plus basse et la plus intérieure, déroule la séquence « baissez-vous et couvrez-vous », et indique le bâtiment solide le plus proche si vous pouvez encore l'atteindre.",
+        body: "Aucun temps pour réfléchir. ProtectionIV vous place dans la pièce la plus basse et la plus intérieure, déroule la séquence « baissez-vous et couvrez-vous », et indique le bâtiment solide le plus proche si vous pouvez encore l'atteindre.",
         action: "Si elle frappe : gagnez la pièce la plus basse et la plus intérieure et protégez votre tête et votre nuque. Ne vous abritez jamais sous un viaduc d'autoroute !" },
       { id: "wildfire", flip: true,
         title: "Le feu avance avec le vent.",
@@ -248,7 +248,7 @@ const CONTENT = {
         action: "S'il frappe : partez tôt et éloignez-vous de la fumée, jamais vers elle, et suivez les routes d'évacuation officielles !" },
       { id: "flood", flip: false,
         title: "L'eau monte rapidement.",
-        body: "Prepaster sait de quel côté le terrain s'élève réellement depuis l'endroit où vous vous tenez, trouve des étages ou des terrains plus élevés, et vous tient à l'écart des routes inondées et des passages de cours d'eau.",
+        body: "ProtectionIV sait de quel côté le terrain s'élève réellement depuis l'endroit où vous vous tenez, trouve des étages ou des terrains plus élevés, et vous tient à l'écart des routes inondées et des passages de cours d'eau.",
         action: "Si elle frappe : gagnez les hauteurs et ne marchez ni ne conduisez jamais dans une eau en mouvement — quinze centimètres suffisent à vous emporter !" },
       { id: "earthquake", flip: true,
         title: "Les secousses ne s'arrêtent pas.",
@@ -257,13 +257,13 @@ const CONTENT = {
     ],
     dataTitle: "Chaque plan repose sur des données réelles et des consignes officielles.",
     dataIntro:
-      "Prepaster n'improvise jamais. Dès qu'une alerte se déclenche, il lit des flux en direct à " +
+      "ProtectionIV n'improvise jamais. Dès qu'une alerte se déclenche, il lit des flux en direct à " +
       "vos coordonnées exactes et fonde chaque instruction critique sur les agences qui écrivent les " +
       "règles. Voici exactement ce qu'il consulte, et le rôle de chaque source.",
     block1: "Données en direct utilisées",
     block2: "Référence des consignes officielles",
     liveData: [
-      ["NWS (National Weather Service)", "Veilles et avertissements officiels américains pour inondations, tornades et intempéries, récupérés avec leur polygone exact de zone avertie pour que Prepaster sache si vous vous trouvez réellement à l'intérieur de la zone d'alerte, et pas seulement à proximité."],
+      ["NWS (National Weather Service)", "Veilles et avertissements officiels américains pour inondations, tornades et intempéries, récupérés avec leur polygone exact de zone avertie pour que ProtectionIV sache si vous vous trouvez réellement à l'intérieur de la zone d'alerte, et pas seulement à proximité."],
       ["Environnement et Changement climatique Canada", "L'équivalent canadien, fournissant des avertissements météo régionaux en direct pour les utilisateurs au nord de la frontière, normalisés dans la même forme d'alerte pour que le reste du moteur les traite à l'identique."],
       ["Flux sismique de l'USGS", "Détections sismiques mondiales en temps réel (magnitude, épicentre, profondeur et heure), utilisées pour confirmer qu'un séisme s'est réellement produit près de vous et fonder le plan sur sa taille et sa distance réelles."],
       ["NASA FIRMS", "Détections thermiques satellites des incendies actifs, actualisées au fil de la journée, pour que le plan réagisse à l'endroit où les flammes brûlent maintenant, et non là où un feu a été signalé il y a des heures."],
@@ -286,7 +286,7 @@ const CONTENT = {
     ],
     ctaTitle: "Sachez quoi faire avant d'en avoir besoin.",
     ctaSub: "Transformez une alerte stressante en un plan gérable.",
-    foot: "Prepaster est un moteur de décision pour le moment où une alerte se déclenche. Ceci démontre le moteur, déclenché par une alerte que vous fournissez ou simulez.",
+    foot: "ProtectionIV est un moteur de décision pour le moment où une alerte se déclenche. Ceci démontre le moteur, déclenché par une alerte que vous fournissez ou simulez.",
   },
 };
 
@@ -321,7 +321,7 @@ export default function Landing({ onLaunch, language = "en", onLanguage }) {
             width="28"
             height="28"
           />
-          Prepaster
+          ProtectionIV
         </span>
         <div className="lp-nav-right">
           <div className="lang-toggle" role="group" aria-label="Language / Langue">
@@ -356,7 +356,7 @@ export default function Landing({ onLaunch, language = "en", onLanguage }) {
         <div className="lp-hero-bg" />
         <div className="lp-hero-veil" />
         <div className="lp-hero-inner">
-          <h1 className="lp-hero-title" data-reveal>Prepaster</h1>
+          <h1 className="lp-hero-title" data-reveal>ProtectionIV</h1>
           <p className="lp-hero-sub" data-reveal>{c.heroSub}</p>
           <div className="lp-hero-actions" data-reveal>
             <button className="lp-btn lp-btn--solid" onClick={() => onLaunch()}>{c.launch}</button>

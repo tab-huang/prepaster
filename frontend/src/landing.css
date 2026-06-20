@@ -1,4 +1,4 @@
-/* landing.css - Prepaster marketing landing. Scoped to .lp-*.
+/* landing.css - ProtectionIV marketing landing. Scoped to .lp-*.
    Cinematic, scroll-told. Animations are paused until a section gets `.lp-in`
    (added by IntersectionObserver), so each scene plays once, on cue. */
 

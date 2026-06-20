@@ -1,8 +1,8 @@
 # Design Philosophy
 
-> **Prepaster — turn a stressful disaster alert into a manageable plan.**
+> **ProtectionIV — turn a stressful disaster alert into a manageable plan.**
 >
-> Warnings tell you *that* something is coming. Prepaster tells you *what to do* about it.
+> Warnings tell you *that* something is coming. ProtectionIV tells you *what to do* about it.
 
 Everything in this project is built around a single belief: **in a disaster, the
 scarce resource is not information — it's clarity.** People being warned of a flood,
@@ -89,9 +89,9 @@ The landing page is deliberately minimalist because **it is the first proof that
 app will not overwhelm you.** A product that claims to make a disaster manageable
 cannot greet you with a cluttered marketing page.
 
-- **A one-word hero** — *Prepaster* — and a single sentence of intent. No feature
+- **A one-word hero** — *ProtectionIV* — and a single sentence of intent. No feature
   grid, no carousel of badges.
-- **A two-line thesis**: warnings tell you *that* something is coming; Prepaster
+- **A two-line thesis**: warnings tell you *that* something is coming; ProtectionIV
   tells you *what to do*. The whole value proposition fits in a breath.
 - **Quiet, hand-drawn hazard scenes** for the four supported disasters (flood,
   wildfire, tornado, earthquake), each with one plain-language line of what to
@@ -246,12 +246,12 @@ depends on the AI.**
 
 ## 7. Inclusion: not excluding people under stress
 
-The clearest exclusion risk in a tool like this is **language**. Prepaster's live-alert
+The clearest exclusion risk in a tool like this is **language**. ProtectionIV's live-alert
 coverage is the **US and Canada** — and Canada is officially bilingual. A francophone
 user in Québec receiving English-only, life-or-death instructions is being excluded at
 exactly the worst moment.
 
-So Prepaster has an **EN / FR language toggle**: the AI-generated plan, headline, and
+So ProtectionIV has an **EN / FR language toggle**: the AI-generated plan, headline, and
 follow-up Q&A are produced in French (the model is instructed to respond in French —
 see `ai.synthesize` / `ai.follow_up`), and the key labels on the plan screen are
 localized (`i18n.js`). It's scoped honestly — the marketing landing and some minor
@@ -353,7 +353,7 @@ disaster that lasts the longest.
 
 ## In one line
 
-**Prepaster reduces disaster response to one clear next action — and is engineered,
+**ProtectionIV reduces disaster response to one clear next action — and is engineered,
 visually and architecturally, so that the simplicity is never at the expense of
 safety.** The minimalism *is* the safety: less to read, less to doubt, less to slow
 you down, and a system designed so the most trustworthy answer is always the one

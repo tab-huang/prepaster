@@ -130,7 +130,7 @@ const C = {
     aiLabel: "AI synthesis",
     aiRows: [
       { k: "Provider", v: <>OpenRouter (OpenAI-compatible), via the <code>openai</code> async SDK</> },
-      { k: "Model", v: <><code>nex-agi/nex-n2-pro:free</code> - configurable via <code>OPENROUTER_MODEL</code>; vision via <code>OPENROUTER_VISION_MODEL</code></> },
+      { k: "Model", v: <><code>anthropic/claude-sonnet-4-6</code> - configurable via <code>OPENROUTER_MODEL</code>; vision via <code>OPENROUTER_VISION_MODEL</code></> },
       { k: "Call sites", v: <>Vision screenshot parse · Stage-5 plan synthesis · follow-up step/question · plus the Recover flow's <code>synthesize_cleanup</code> · <code>recovery_follow_up</code> · <code>analyze_paperwork</code> · <code>ocr_document_text</code> (photo letter → text). Recovery deadlines use an <strong>LLM-extracts / code-computes</strong> hybrid: the model returns the deadline's structure, <code>reconcile_deadlines</code> does the date math and overrides it.</> },
       { k: "Contract", v: <>Strict JSON + defensive parser; any failure falls back to the deterministic plan (<code>modules.build_plan</code> for response, <code>recovery.*</code> for Recover)</> },
       { k: "Time context", v: <><code>_timing_context()</code> builds minutes-until/since-expiry + active/expired status from the client <code>now</code> and alert <code>expires</code>, so plans ground in real clock time and "do I still have time?" gets a concrete answer</> },
@@ -157,7 +157,7 @@ const C = {
     svcLabel: "External data & services",
     svcHead: ["Service", "Used for", "Key?"],
     services: [
-      { svc: "OpenRouter (nex-agi/nex-n2-pro:free)", use: "Vision parse + plan synthesis + follow-up + recovery", key: "Yes", keyLabel: "Yes" },
+      { svc: "OpenRouter (anthropic/claude-sonnet-4-6)", use: "Vision parse + plan synthesis + follow-up + recovery", key: "Yes", keyLabel: "Yes" },
       { svc: "NWS api.weather.gov",        use: "Live active alerts (US)", key: "No", keyLabel: "No" },
       { svc: "ECCC GeoMet",                use: "Live active alerts (Canada)", key: "No", keyLabel: "No" },
       { svc: "Open-Meteo Elevation",       use: "High-ground reasoning (flood)", key: "No", keyLabel: "No" },
@@ -342,7 +342,7 @@ const C = {
     aiLabel: "Synthèse IA",
     aiRows: [
       { k: "Fournisseur", v: <>OpenRouter (compatible OpenAI), via le SDK asynchrone <code>openai</code></> },
-      { k: "Modèle", v: <><code>nex-agi/nex-n2-pro:free</code> — configurable via <code>OPENROUTER_MODEL</code> ; vision via <code>OPENROUTER_VISION_MODEL</code></> },
+      { k: "Modèle", v: <><code>anthropic/claude-sonnet-4-6</code> — configurable via <code>OPENROUTER_MODEL</code> ; vision via <code>OPENROUTER_VISION_MODEL</code></> },
       { k: "Points d'appel", v: <>Analyse visuelle de la capture · synthèse du plan (étape 5) · étape/question de suivi · plus le flux Rétablir : <code>synthesize_cleanup</code> · <code>recovery_follow_up</code> · <code>analyze_paperwork</code> · <code>ocr_document_text</code> (photo de lettre → texte). Les délais de rétablissement utilisent un modèle <strong>l'IA extrait / le code calcule</strong> : le modèle renvoie la structure du délai, <code>reconcile_deadlines</code> fait le calcul de date et le remplace.</> },
       { k: "Contrat", v: <>JSON strict + analyseur défensif ; tout échec retombe sur le plan déterministe (<code>modules.build_plan</code> pour la réponse, <code>recovery.*</code> pour Rétablir)</> },
       { k: "Contexte temporel", v: <><code>_timing_context()</code> calcule les minutes avant/depuis l'expiration + le statut actif/expiré à partir du <code>now</code> du client et de l'<code>expires</code> de l'alerte, pour que les plans s'ancrent dans l'heure réelle et que « ai-je encore le temps ? » obtienne une réponse concrète</> },
@@ -369,7 +369,7 @@ const C = {
     svcLabel: "Données et services externes",
     svcHead: ["Service", "Utilisé pour", "Clé ?"],
     services: [
-      { svc: "OpenRouter (nex-agi/nex-n2-pro:free)", use: "Analyse visuelle + synthèse du plan + suivi + rétablissement", key: "Yes", keyLabel: "Oui" },
+      { svc: "OpenRouter (anthropic/claude-sonnet-4-6)", use: "Analyse visuelle + synthèse du plan + suivi + rétablissement", key: "Yes", keyLabel: "Oui" },
       { svc: "NWS api.weather.gov",        use: "Alertes actives en direct (US)", key: "No", keyLabel: "Non" },
       { svc: "ECCC GeoMet",                use: "Alertes actives en direct (Canada)", key: "No", keyLabel: "Non" },
       { svc: "Open-Meteo Elevation",       use: "Raisonnement sur les hauteurs (inondation)", key: "No", keyLabel: "Non" },

@@ -137,7 +137,7 @@ export default function App() {
   const [planUpdated, setPlanUpdated] = useState(false);
   // News context built during demo fake-fetch, reused on plan updates.
   const [newsContext, setNewsContext] = useState("");
-  // UI + AI-output language. Prepaster covers the US + bilingual Canada, so a
+  // UI + AI-output language. ProtectionIV covers the US + bilingual Canada, so a
   // francophone user can switch the plan (and key labels) to French. The choice is
   // made up-front — on the marketing landing and the app home screen — and locked
   // for the session, so the AI is *only ever asked* in the chosen language. (It is

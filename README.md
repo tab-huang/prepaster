@@ -1,10 +1,10 @@
-# Prepaster
+# ProtectionIV
 
 > **Turn a stressful disaster alert into a manageable plan.**
 > When a disaster alert fires, what do you actually *do* - right now, from exactly where you're standing?
 
 Official warning systems are excellent at telling you *that* something is coming and almost
-useless at telling you what to do about it from your specific spot. Prepaster closes
+useless at telling you what to do about it from your specific spot. ProtectionIV closes
 that gap. It takes your location and an alert, triages **how much time you have**, runs a
 **hazard-specific decision module** over live geospatial data, and returns **one calm,
 plain-language action plan** - drawn over a satellite map, grounded in official safety
@@ -73,9 +73,9 @@ Three principles shape every decision in the codebase:
 
 ### Marketing landing page
 Before the app shell, a standalone, scroll-told **landing page** (`Landing.jsx`) introduces
-Prepaster: a hero, a one-line product thesis (*warnings tell you that something is coming;
-Prepaster tells you what to do*), and one animated SVG scene per hazard with a plain-language
-"if it strikes" line. **Launch Prepaster** drops into the app. It's deliberately minimal -
+ProtectionIV: a hero, a one-line product thesis (*warnings tell you that something is coming;
+ProtectionIV tells you what to do*), and one animated SVG scene per hazard with a plain-language
+"if it strikes" line. **Launch ProtectionIV** drops into the app. It's deliberately minimal -
 the first proof that the app won't overwhelm you (see [`DESIGN_PHILOSOPHY.md`](DESIGN_PHILOSOPHY.md)).
 
 ### Five ways in (home screen)
@@ -587,7 +587,7 @@ module reasons from the epicentre and proximity instead.
 ### Frontend, in detail
 
 - **`Landing.jsx`** - The standalone marketing landing page rendered before the app shell:
-  a hero, the product thesis, and one scroll-animated SVG scene per hazard. **Launch Prepaster**
+  a hero, the product thesis, and one scroll-animated SVG scene per hazard. **Launch ProtectionIV**
   hands off into `App.jsx`.
 - **`App.jsx`** - The orchestrator. A phase state machine
   (`home → instructions | screenshot | demo → picker → notification → run | resource → result`,

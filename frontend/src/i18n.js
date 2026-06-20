@@ -5,7 +5,7 @@
 // surrounding *chrome* labels on the plan flow so the screen reads coherently in
 // French. The marketing landing page and some minor static copy stay English.
 //
-// Why French: Prepaster's coverage is the US + Canada, and Canada is officially
+// Why French: ProtectionIV's coverage is the US + Canada, and Canada is officially
 // bilingual — a francophone user (e.g. in Québec) shouldn't get English-only
 // life-safety instructions. (See the exclusion guardrail in DESIGN_PHILOSOPHY.md.)
 
