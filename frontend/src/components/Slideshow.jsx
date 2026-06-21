@@ -6,6 +6,7 @@ import Icon from "./Icon.jsx";
 import MicButton from "./MicButton.jsx";
 import { makeT } from "../i18n.js";
 import { speak, stopSpeaking, ttsSupported } from "../speech.js";
+import PlanGuidelines from "./PlanGuidelines.jsx";
 
 function ExpandedDetail({ items, t }) {
   const [open, setOpen] = useState(false);
@@ -19,6 +20,34 @@ function ExpandedDetail({ items, t }) {
         <ol className="step-expand-list">
           {items.map((item, i) => <li key={i}>{item}</li>)}
         </ol>
+      )}
+    </div>
+  );
+}
+
+// Collapsed-by-default "why this plan" — the model's own bullet-point reasoning
+// for how it reached the plan. Short enough to skim; it's transparency, not advice.
+function ReasoningSection({ why, t }) {
+  const [open, setOpen] = useState(false);
+  const points = Array.isArray(why) ? why.filter((p) => p && String(p).trim()) : [];
+  if (points.length === 0) return null;
+  return (
+    <div className="slide-reasoning">
+      <button
+        className="slide-reasoning-toggle"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+      >
+        {open ? t("hideReasoning") : t("showReasoning")}
+      </button>
+      {open && (
+        <div className="slide-reasoning-body">
+          <div className="slide-reasoning-title">{t("reasoningTitle")}</div>
+          <ul className="slide-reasoning-list">
+            {points.map((p, i) => <li key={i}>{p}</li>)}
+          </ul>
+          <p className="slide-reasoning-hint">{t("reasoningHint")}</p>
+        </div>
       )}
     </div>
   );
@@ -148,6 +177,8 @@ export default function Slideshow({ rec, loading, updating, planUpdated, extraSt
               <span className="slide-ai-sources">Ready.gov · NWS · FEMA</span>
             </div>
           )}
+          <ReasoningSection why={rec.why} t={t} />
+          <PlanGuidelines variant="full" lang={lang} />
         </div>
       ) : (
         <div className="slide">

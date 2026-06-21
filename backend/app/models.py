@@ -164,11 +164,20 @@ class PaperworkRequest(BaseModel):
     """Recover flow, Part B — analyze redacted recovery paperwork."""
     hazardType: HazardType
     documentText: str = Field("", max_length=150000)  # ~40k words; real insurance/FEMA letters run many pages
+    # Optional page(s) of the letter — OCR'd to text, then run through the same
+    # extractor as a pasted document. Up to 10 pages (a PDF renders to one image
+    # per page on the client). Mirrors the clean-up intake.
+    documentImages: list[str] = Field(default_factory=list, max_length=10)
     insurerName: str = Field("", max_length=120)
     claimStatus: str = Field("", max_length=40)
     damageCategories: list[str] = Field(default_factory=list, max_length=12)
     now: Optional[str] = None  # client's current time (ISO) — anchors deadline-day computation
     language: Literal["en", "fr"] = "en"
+
+    @field_validator("documentImages")
+    @classmethod
+    def _cap_doc_images(cls, v: list[str]) -> list[str]:
+        return [img for img in v if isinstance(img, str) and len(img) <= 9_000_000][:10]
 
 
 class Recommendation(BaseModel):

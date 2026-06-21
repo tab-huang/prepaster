@@ -18,6 +18,12 @@ Selection logic per (hazard, time_tier):
 Both caches update together whenever a live fetch succeeds:
   the in-memory entry always refreshes; the file entry only refreshes
   if more than 30 days have passed since it was last written.
+
+What is cached is the scraped *candidate pool* (top POOL_K chunks by base hazard
+keywords), not the final selection. On every call the pool is re-ranked against
+base + the caller's situation keywords (`extra_keywords`) and the top TOP_K become
+the context. So retrieval is situation-aware (the chunks reflect the user's own
+free text) even on a pure cache hit, with no extra network and microsecond cost.
 """
 from __future__ import annotations
 
@@ -106,8 +112,23 @@ _RECOVERY_KEYWORDS: dict[str, list[str]] = {
 }
 
 TOP_K = 7
+POOL_K = 30          # candidate chunks cached per hazard, re-ranked per request
 MIN_LEN = 60
 MAX_CHUNK_CHARS = 480
+
+# Common words that carry no retrieval signal — dropped from free-text queries
+# so situation keywords like "basement", "musty", "power" survive and match.
+_STOPWORDS = {
+    "the", "a", "an", "and", "or", "but", "is", "are", "was", "were", "be", "been",
+    "being", "to", "of", "in", "on", "at", "for", "with", "from", "by", "as", "it",
+    "its", "this", "that", "these", "those", "i", "we", "you", "they", "he", "she",
+    "my", "our", "your", "their", "have", "has", "had", "do", "does", "did", "will",
+    "would", "can", "could", "should", "about", "into", "over", "under", "near",
+    "still", "just", "very", "really", "there", "here", "out", "off", "not", "yes",
+    "get", "got", "getting", "going", "came", "come", "like", "some", "any", "all",
+    "more", "most", "what", "when", "where", "how", "why", "which", "who", "than",
+    "then", "also", "because", "been", "around", "still", "much", "many", "been",
+}
 
 _MONTHLY_CACHE_PATH = Path(__file__).parent / "rag_monthly_cache.json"
 _DAY_SECONDS  = 24 * 3600
@@ -176,6 +197,58 @@ def _score(chunk: str, keywords: list[str]) -> int:
     return sum(1 for kw in keywords if kw in lower)
 
 
+def keywords_from_text(text: str, limit: int = 25) -> list[str]:
+    """Turn free-form user text into lexical keywords for _score().
+
+    Lowercases, splits on non-alphanumerics, drops stopwords and very short
+    tokens, dedupes (order-preserving), and caps the count. The result is a list
+    of substrings _score() can match against retrieved chunks — this is what makes
+    retrieval situation-aware while staying purely lexical (no embeddings, no deps)."""
+    if not text:
+        return []
+    out: list[str] = []
+    seen: set[str] = set()
+    for tok in re.findall(r"[a-z0-9]+", text.lower()):
+        if len(tok) < 4 or tok in _STOPWORDS or tok in seen:
+            continue
+        seen.add(tok)
+        out.append(tok)
+        if len(out) >= limit:
+            break
+    return out
+
+
+def _select(pool: list[str], keywords: list[str], k: int = TOP_K) -> str:
+    """Pick the top-k chunks from a candidate pool by keyword score, deduped,
+    joined into the context block. Re-ranking the cached pool here (rather than at
+    fetch time) is what lets per-request situation keywords take effect even on a
+    cache hit — and it's microseconds over a ~30-chunk pool."""
+    if not pool:
+        return ""
+    scored = sorted(((_score(c, keywords), c) for c in pool), key=lambda x: x[0], reverse=True)
+    seen: set[str] = set()
+    top: list[str] = []
+    for _, chunk in scored:
+        if chunk not in seen:
+            seen.add(chunk)
+            top.append(chunk)
+            if len(top) >= k:
+                break
+    return "\n\n".join(top)
+
+
+def _rerank(result: dict, base_keywords: list[str], extra_keywords: list[str] | None) -> dict:
+    """Rebuild the context from the cached candidate pool using base + situation
+    keywords. Falls back to the stored context for older cache entries with no pool."""
+    pool = result.get("pool")
+    if not pool or not extra_keywords:
+        return result
+    keywords = list(base_keywords) + [kw.lower() for kw in extra_keywords if kw]
+    out = dict(result)
+    out["context"] = _select(pool, keywords, TOP_K)
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Network fetch
 # ---------------------------------------------------------------------------
@@ -215,22 +288,10 @@ async def _fetch_source(src: dict, keywords: list[str]) -> dict:
         return failed
 
 
-async def _fetch_fresh(hazard: str, extra_keywords: list[str] | None = None) -> dict:
-    """Scrape all sources for a hazard, score, and return a result dict."""
-    sources = GOV_SOURCES.get(hazard, [])
-    if not sources:
-        return {"ok": False, "context": "", "sources": []}
-
-    keywords = list(_BASE_KEYWORDS.get(hazard, []))
-    if extra_keywords:
-        keywords += [kw.lower() for kw in extra_keywords if kw]
-
-    raw = await asyncio.gather(
-        *[_fetch_source(src, keywords) for src in sources],
-        return_exceptions=True,
-    )
-    results = [r for r in raw if isinstance(r, dict)]
-
+def _pool_and_result(results: list[dict], keywords: list[str]) -> dict:
+    """Shared tail of the fetch functions: rank all scraped chunks by base
+    keywords, keep the top POOL_K as a re-rankable candidate pool, and seed the
+    default context from it."""
     all_chunks: list[tuple[int, str]] = []
     source_meta = []
     for res in results:
@@ -244,18 +305,35 @@ async def _fetch_fresh(hazard: str, extra_keywords: list[str] | None = None) -> 
             all_chunks.append((_score(chunk, keywords), chunk))
 
     if not all_chunks:
-        return {"ok": False, "context": "", "sources": source_meta}
+        return {"ok": False, "context": "", "sources": source_meta, "pool": []}
 
     all_chunks.sort(key=lambda x: x[0], reverse=True)
-
     seen: set[str] = set()
-    top: list[str] = []
+    pool: list[str] = []
     for _, chunk in all_chunks:
-        if chunk not in seen and len(top) < TOP_K:
+        if chunk not in seen:
             seen.add(chunk)
-            top.append(chunk)
+            pool.append(chunk)
+            if len(pool) >= POOL_K:
+                break
 
-    return {"ok": True, "context": "\n\n".join(top), "sources": source_meta}
+    return {"ok": True, "context": _select(pool, keywords, TOP_K), "sources": source_meta, "pool": pool}
+
+
+async def _fetch_fresh(hazard: str) -> dict:
+    """Scrape all sources for a hazard and return a result dict with a cached,
+    re-rankable candidate pool (scored on the hazard's base keywords)."""
+    sources = GOV_SOURCES.get(hazard, [])
+    if not sources:
+        return {"ok": False, "context": "", "sources": [], "pool": []}
+
+    keywords = list(_BASE_KEYWORDS.get(hazard, []))
+    raw = await asyncio.gather(
+        *[_fetch_source(src, keywords) for src in sources],
+        return_exceptions=True,
+    )
+    results = [r for r in raw if isinstance(r, dict)]
+    return _pool_and_result(results, keywords)
 
 
 # ---------------------------------------------------------------------------
@@ -319,70 +397,57 @@ async def fetch_rag_context(
     monthly_ts     = monthly_entry["ts"] if monthly_entry else 0.0
     inmem_is_newer = inmem_ts > monthly_ts
 
+    # Resolve the (cached or freshly-fetched) candidate pool, then re-rank it
+    # against the situation keywords below. The cache stores the pool, not the
+    # final selection, so the same cached fetch serves every user while the
+    # context they see still reflects their own situation.
     if is_urgent:
         # Fast path: never block on a web fetch; use whichever cache is newer.
         if inmem_fresh and inmem_is_newer:
-            return inmem_entry["result"]
-        if monthly_fresh:
-            return monthly_entry["result"]
-        if inmem_fresh:
-            return inmem_entry["result"]
-        # No usable cache — fetch once to prime both caches.
-        result = await _fetch_fresh(hazard, extra_keywords)
-        _store_inmem(hazard, result, now)
-        _maybe_update_monthly(monthly_all, hazard, result, now)
-        return result
+            result = inmem_entry["result"]
+        elif monthly_fresh:
+            result = monthly_entry["result"]
+        elif inmem_fresh:
+            result = inmem_entry["result"]
+        else:
+            # No usable cache — fetch once to prime both caches.
+            result = await _fetch_fresh(hazard)
+            _store_inmem(hazard, result, now)
+            _maybe_update_monthly(monthly_all, hazard, result, now)
     else:
         # Non-urgent path: fetch fresh, but skip if 24 h cache is already newer than monthly.
         if inmem_fresh and inmem_is_newer:
-            return inmem_entry["result"]
-        result = await _fetch_fresh(hazard, extra_keywords)
-        if result.get("ok"):
-            _store_inmem(hazard, result, now)
-            _maybe_update_monthly(monthly_all, hazard, result, now)
-            return result
-        # Fetch failed — fall back to best available cache.
-        if inmem_fresh:
-            return inmem_entry["result"]
-        if monthly_entry:
-            return monthly_entry["result"]
-        return {"ok": False, "context": "", "sources": []}
+            result = inmem_entry["result"]
+        else:
+            fresh = await _fetch_fresh(hazard)
+            if fresh.get("ok"):
+                _store_inmem(hazard, fresh, now)
+                _maybe_update_monthly(monthly_all, hazard, fresh, now)
+                result = fresh
+            elif inmem_fresh:
+                result = inmem_entry["result"]
+            elif monthly_entry:
+                result = monthly_entry["result"]
+            else:
+                result = {"ok": False, "context": "", "sources": [], "pool": []}
+
+    return _rerank(result, _BASE_KEYWORDS.get(hazard, []), extra_keywords)
 
 
-async def _fetch_fresh_recovery(hazard: str, extra_keywords: list[str] | None = None) -> dict:
-    """Scrape the recovery (clean-up / re-entry) sources for a hazard."""
+async def _fetch_fresh_recovery(hazard: str) -> dict:
+    """Scrape the recovery (clean-up / re-entry) sources for a hazard, returning a
+    result dict with a re-rankable candidate pool (scored on base recovery keywords)."""
     sources = GOV_SOURCES_RECOVERY.get(hazard, [])
     if not sources:
-        return {"ok": False, "context": "", "sources": []}
+        return {"ok": False, "context": "", "sources": [], "pool": []}
 
     keywords = list(_RECOVERY_KEYWORDS.get(hazard, []))
-    if extra_keywords:
-        keywords += [kw.lower() for kw in extra_keywords if kw]
-
     raw = await asyncio.gather(
         *[_fetch_source(src, keywords) for src in sources],
         return_exceptions=True,
     )
     results = [r for r in raw if isinstance(r, dict)]
-
-    all_chunks: list[tuple[int, str]] = []
-    source_meta = []
-    for res in results:
-        source_meta.append({"url": res["url"], "title": res["title"], "ok": res["ok"], "paragraphs": res["paragraphs"]})
-        for chunk in res["chunks"]:
-            all_chunks.append((_score(chunk, keywords), chunk))
-
-    if not all_chunks:
-        return {"ok": False, "context": "", "sources": source_meta}
-
-    all_chunks.sort(key=lambda x: x[0], reverse=True)
-    seen: set[str] = set()
-    top: list[str] = []
-    for _, chunk in all_chunks:
-        if chunk not in seen and len(top) < TOP_K:
-            seen.add(chunk)
-            top.append(chunk)
-    return {"ok": True, "context": "\n\n".join(top), "sources": source_meta}
+    return _pool_and_result(results, keywords)
 
 
 async def fetch_recovery_rag(hazard: str, extra_keywords: list[str] | None = None) -> dict:
@@ -405,15 +470,18 @@ async def fetch_recovery_rag(hazard: str, extra_keywords: list[str] | None = Non
     inmem_ts = inmem_entry["ts"] if inmem_entry else 0.0
 
     if inmem_fresh and inmem_ts > monthly_ts:
-        return inmem_entry["result"]
+        result = inmem_entry["result"]
+    else:
+        fresh = await _fetch_fresh_recovery(hazard)
+        if fresh.get("ok"):
+            _store_inmem(cache_key, fresh, now)
+            _maybe_update_monthly(monthly_all, cache_key, fresh, now)
+            result = fresh
+        elif inmem_fresh:
+            result = inmem_entry["result"]
+        elif monthly_entry:
+            result = monthly_entry["result"]
+        else:
+            result = {"ok": False, "context": "", "sources": [], "pool": []}
 
-    result = await _fetch_fresh_recovery(hazard, extra_keywords)
-    if result.get("ok"):
-        _store_inmem(cache_key, result, now)
-        _maybe_update_monthly(monthly_all, cache_key, result, now)
-        return result
-    if inmem_fresh:
-        return inmem_entry["result"]
-    if monthly_entry:
-        return monthly_entry["result"]
-    return {"ok": False, "context": "", "sources": []}
+    return _rerank(result, _RECOVERY_KEYWORDS.get(hazard, []), extra_keywords)

@@ -1019,6 +1019,72 @@ html, body, #root {
 .step-expand-list li {
   font-size: 14px; line-height: 1.55; color: var(--ink-soft); padding: 4px 0;
 }
+
+/* Collapsed-by-default chain-of-thought on the summary slide. */
+.slide-reasoning { margin-top: 12px; }
+.slide-reasoning-toggle {
+  background: none; border: none; padding: 0;
+  color: var(--ink-soft); font-size: 13px; font-family: var(--sans);
+  font-weight: 500; cursor: pointer; letter-spacing: 0;
+}
+.slide-reasoning-toggle:hover { color: var(--accent-ink); }
+.slide-reasoning-body {
+  margin-top: 12px; padding: 14px 16px;
+  background: var(--surface-2, rgba(0, 0, 0, 0.03));
+  border: 1px solid var(--line); border-radius: 12px;
+}
+.slide-reasoning-title {
+  font-size: 12px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--muted); margin-bottom: 8px;
+}
+.slide-reasoning-body p {
+  font-size: 14px; line-height: 1.6; color: var(--ink-soft); margin: 0 0 10px 0;
+}
+.slide-reasoning-body p:last-child { margin-bottom: 0; }
+.slide-reasoning-list {
+  margin: 0; padding: 0 0 0 18px; list-style: disc;
+}
+.slide-reasoning-list li {
+  font-size: 14px; line-height: 1.55; color: var(--ink-soft); padding: 3px 0;
+}
+.slide-reasoning-hint {
+  font-size: 12px !important; color: var(--muted) !important;
+  font-style: italic; margin-top: 12px !important;
+  padding-top: 10px; border-top: 1px solid var(--line);
+}
+
+/* "How to use this plan" — collapsible guidelines on the summary slide. */
+.plan-guidelines { margin-top: 12px; }
+.plan-guidelines-toggle {
+  background: none; border: none; padding: 0;
+  color: var(--ink-soft); font-size: 13px; font-family: var(--sans);
+  font-weight: 500; cursor: pointer; letter-spacing: 0;
+}
+.plan-guidelines-toggle:hover { color: var(--accent-ink); }
+.plan-guidelines-body {
+  margin-top: 12px; padding: 14px 16px;
+  background: var(--surface-2, rgba(0, 0, 0, 0.03));
+  border: 1px solid var(--line); border-radius: 12px;
+}
+.plan-guidelines-title {
+  font-size: 14px; font-weight: 700; color: var(--ink);
+  margin-bottom: 10px;
+}
+.plan-guidelines-list {
+  margin: 0; padding: 0 0 0 18px; list-style: disc;
+}
+.plan-guidelines-list li {
+  font-size: 14px; line-height: 1.55; color: var(--ink-soft); padding: 4px 0;
+}
+
+/* Compact two-line variant for the RUN tier. */
+.plan-guidelines-compact {
+  margin: 16px 0 0 0; padding: 12px 0 0 18px;
+  list-style: disc; border-top: 1px solid var(--line);
+}
+.plan-guidelines-compact li {
+  font-size: 14px; line-height: 1.5; color: var(--ink-soft); padding: 3px 0;
+}
 .dot {
   width: 26px; height: 5px; border-radius: 9999px;
   background: var(--line); border: none; padding: 0; cursor: pointer;

@@ -10,6 +10,7 @@
 import Icon from "./Icon.jsx";
 import { speak, ttsSupported } from "../speech.js";
 import { makeT } from "../i18n.js";
+import PlanGuidelines from "./PlanGuidelines.jsx";
 
 const RUN_GUIDANCE_FR = {
   flood: {
@@ -86,6 +87,7 @@ export default function RunGuidance({ guidance, lang = "en", hazardType }) {
           <li key={i}>{line}</li>
         ))}
       </ul>
+      <PlanGuidelines variant="compact" lang={lang} />
     </div>
   );
 }

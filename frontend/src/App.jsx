@@ -190,6 +190,7 @@ export default function App() {
   // or the paperwork helper. recoverHazard is kept apart from hazardType so it can't
   // clobber an in-progress response plan.
   const [recoverHazard, setRecoverHazard] = useState(null);
+  const [recoverInitialText, setRecoverInitialText] = useState("");
   const [cleanupRec, setCleanupRec] = useState(null);
   const [cleanupRedactions, setCleanupRedactions] = useState([]);
   const [cleanupLoading, setCleanupLoading] = useState(false);
@@ -947,17 +948,20 @@ export default function App() {
   function handleStartRecovery() {
     if (!hazardType) return;
     const parts = [];
-    if (situation?.description) parts.push(situation.description.slice(0, 800));
+    // Mark the alert text as the PAST event we're recovering from — otherwise the
+    // recovery AI reads its imminent-danger wording ("flooding is expected…") as a
+    // current threat and produces an evacuation headline instead of a clean-up one.
+    if (situation?.description) parts.push(`The ${hazardType} has now passed. Earlier alert said: "${situation.description.slice(0, 800)}"`);
     if (resources.atHome === true) parts.push("User is currently at home.");
     if (resources.atHome === false) parts.push("User is away from home.");
     if (resources.hasVehicle === true) parts.push("Has a vehicle.");
     if (resources.hasVehicle === false) parts.push("No vehicle — on foot.");
     if (resources.hasSlowMovers) parts.push("Has people with them who can't move quickly.");
     if (resources.hasSupplies === false) parts.push("Did not have emergency supplies on hand.");
-    const situationText = parts.join(" ");
     setRecoverHazard(hazardType);
+    setRecoverInitialText(parts.join(" "));
     setError("");
-    generateCleanup({ damageCategories: [], situationText });
+    setPhase("recover_cleanup");
   }
 
   // Recover — Part A: generate the clean-up / re-entry plan, then show it in the
@@ -973,7 +977,7 @@ export default function App() {
     setPhase("recover_cleanup_result");
     try {
       const res = await getCleanupPlan({
-        hazardType: recoverHazard,
+        hazardType: input.hazard || recoverHazard,
         damageCategories: input.damageCategories,
         situationText: input.situationText,
         documentText: input.documentText || "",
@@ -1063,10 +1067,11 @@ export default function App() {
   // Insurance/paperwork capability inside the recovery assistant. Returns the raw
   // API response so the assistant can render the structured analysis (or the
   // sensitive-data guardrail message) as a chat bubble.
-  async function analyzeRecoverDoc({ documentText, insurerName, claimStatus }) {
+  async function analyzeRecoverDoc({ documentText, documentImages, insurerName, claimStatus }) {
     return analyzePaperwork({
       hazardType: recoverHazard,
       documentText,
+      documentImages,
       insurerName,
       claimStatus,
       now: new Date().toISOString(),
@@ -1135,7 +1140,7 @@ export default function App() {
           onReal={() => { setError(""); setPhase("screenshot"); }}
           onDemo={() => { setError(""); setPhase("demo"); }}
           onLive={startLive}
-          onRecover={() => { setError(""); setRecoverHazard(null); setCleanupRec(null); setPhase("recover"); }}
+          onRecover={() => { setError(""); setRecoverHazard(null); setRecoverInitialText(""); setCleanupRec(null); setPhase("recover"); }}
           onBack={() => navigate(BASE + '/')}
           onInstructions={() => { setError(""); navigate(BASE + '/howitworks'); }}
           busy={busy}
@@ -1165,6 +1170,7 @@ export default function App() {
           busy={cleanupLoading}
           error={error}
           language={language}
+          initialText={recoverInitialText}
         />
       )}
 

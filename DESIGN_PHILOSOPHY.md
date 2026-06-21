@@ -163,6 +163,13 @@ doesn't.
   and an explicit uncertainty note when the data is thin.
 - **Sources are shown.** Plans cite the official guidance (FEMA, NWS, USGS,
   Ready.gov, Red Cross) they were grounded in.
+- **The reasoning is available, but never forced.** Each plan can unfold a collapsed
+  **"Why this plan?"** section — the model's own short, bulleted account of *how* it got
+  there (the facts it weighed, the tier logic, the trade-offs) so the user can follow the
+  logic and check it against what they're actually seeing. Deliberately **5–10 skimmable
+  bullets, not a stream of raw chain-of-thought**: a frightened person has no time to read
+  a wall of model "thinking," so the transparency is shaped to be glanced at, and it's
+  collapsed by default so it never competes with the one action.
 - **The app never invents a place.** If it sends you somewhere, that somewhere came
   from real map data.
 
@@ -239,8 +246,21 @@ never the sole authority, and it can never strand the user. Safety is layered:
     flexibility finds the deadline in messy wording; deterministic arithmetic
     guarantees the number. A hallucinated deadline can never reach the user.
 
+12. **The human stays the authority.** Every plan carries a calm, collapsed
+    **"You know your situation best"** card that tells the user, in plain terms, to
+    *override the app when reality disagrees with it*: trust your own eyes and adapt a
+    step that doesn't match what you see, treat the plan as guidance rather than a
+    guarantee, stop when you're unsure whether something is safe, call 911 first in a
+    life-threatening emergency, follow official instructions and on-scene responders
+    (police, fire, emergency crews) over the app — they can see what the model can't and
+    have the final say — and adjust the plan if something's wrong. On the RUN tier it
+    shrinks to two lines so it never slows the
+    reflex. Most AI products are designed to be believed; this one is designed to be
+    *checked* — naming the AI's fallibility out loud is itself a safety feature, because
+    the person on the ground always has information the model doesn't.
+
 The throughline: **the AI makes a safe answer better, but a safe answer never
-depends on the AI.**
+depends on the AI — and the person on the ground always outranks it.**
 
 ---
 

@@ -22,6 +22,10 @@ DEPLOYMENT.md
 .env.local
 .env.*.local
 
+# Packaged backend for deploy — bundles backend/.env (live keys). Never commit.
+prepaster_src.zip
+*.zip
+
 # Frontend build output
 frontend/dist/
 frontend/node_modules/

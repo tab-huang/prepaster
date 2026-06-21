@@ -21,7 +21,7 @@ from .ratelimit import RateLimitMiddleware
 from .APIs import news, nws
 from .APIs.alerts import fetch_alert
 from .APIs.discover import find_active_disaster, find_active_disasters, resolve_place
-from .APIs.rag import fetch_rag_context, fetch_recovery_rag
+from .APIs.rag import fetch_rag_context, fetch_recovery_rag, keywords_from_text
 from . import recovery
 from .Calc.guidance import run_guidance
 from .Calc.watch import evaluate as evaluate_alert_state
@@ -329,7 +329,14 @@ async def run_module(req: ModuleRequest):
 @app.post("/api/recommend")
 async def recommend(req: RecommendRequest):
     """Stage 5. RAG context fetch + one AI synthesis call, deterministic fallback baked in."""
-    event_words = (req.situation.event or "").lower().split()
+    # Make retrieval situation-aware: the alert text plus the user's own concern
+    # note become lexical keywords that re-rank the cached chunk pool toward what
+    # THIS person is facing, instead of always returning the generic hazard chunks.
+    situation_text = " ".join(p for p in (
+        req.situation.event, req.situation.description,
+        req.situation.instruction, req.userNote,
+    ) if p)
+    extra_kw = keywords_from_text(situation_text)
 
     # Live flow: pull real local news to ground the plan in current conditions.
     # (Demo mode supplies its own newsContext from the frontend.)
@@ -340,7 +347,7 @@ async def recommend(req: RecommendRequest):
         if news_sources:
             req.newsContext = "\n".join(f"- {a['title']}: {a['snippet']}" for a in news_sources)
 
-    rag = await fetch_rag_context(req.hazardType, extra_keywords=event_words, time_tier=req.timeTier)
+    rag = await fetch_rag_context(req.hazardType, extra_keywords=extra_kw, time_tier=req.timeTier)
     rec = await ai.synthesize(req, rag_context=rag.get("context", ""))
     return {
         "ok": True,
@@ -382,7 +389,11 @@ async def recover_cleanup(req: CleanupRequest):
         as_of = (_parse_iso(req.now) or datetime.now(timezone.utc)).date()
         doc_analysis = recovery.paperwork_mock(doc_text, disaster=req.hazardType, as_of=as_of)
 
-    extra = [c for c in (req.damageCategories or [])]
+    # Situation-aware retrieval: the damage categories + the user's free-text
+    # description re-rank the cached recovery chunks toward their actual mess.
+    extra = keywords_from_text(
+        " ".join([*(req.damageCategories or []), getattr(req, "situationText", "") or ""])
+    )
     rag = await fetch_recovery_rag(req.hazardType, extra_keywords=extra)
     plan = await ai.synthesize_cleanup(req, rag_context=rag.get("context", ""), doc_analysis=doc_analysis)
     return {"ok": True, "recommendation": plan, "rag_sources": rag.get("sources", []), "redactions": redactions}
@@ -402,6 +413,10 @@ async def recover_paperwork(req: PaperworkRequest):
     """Recover, Part B. Analyze recovery paperwork. Auto-redacts likely-sensitive
     data (SSNs, full policy/claim numbers, bank data, addresses, credentials) before
     any analysis, then continues; AI extraction with a deterministic regex fallback."""
+    # No pasted text but a photo/PDF of the letter? OCR it first, then treat it
+    # exactly like pasted text (auto-redact + extraction) — same as clean-up intake.
+    if not (req.documentText or "").strip() and req.documentImages:
+        req.documentText = (await ai.ocr_document_text(req.documentImages)).strip()
     clean, redactions = recovery.redact_sensitive_data(req.documentText or "")
     req.documentText = clean  # everything downstream sees only the scrubbed text
     rag = await fetch_recovery_rag(req.hazardType)

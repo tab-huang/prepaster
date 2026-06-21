@@ -170,7 +170,11 @@ SYSTEM = (
     "Keys: headline_action (string), destination_name (string or null), direction (string or null), "
     "distance (string or null), reason (string), supplies_enroute (string or null), "
     "confidence (high|medium|low), uncertainty_note (string), official_order_present (boolean), "
-    "official_order_text (string).\n\n"
+    "official_order_text (string), why (array of 5-10 short bullet strings, each ≤16 words, plain "
+    "language, walking through HOW you reached this plan in order — the key facts you weighed, the "
+    "hazard/tier logic, the trade-offs, and why this destination/action over alternatives — so the "
+    "reader can follow your reasoning and sanity-check it against their own situation; no jargon, "
+    "do not just restate the steps).\n\n"
     "Core rules:\n"
     "- Pick a destination only from the provided candidates; never invent a place.\n"
     "- ROUTING (flood, wildfire): give destination/direction/distance; never send user to lower ground "
@@ -179,7 +183,11 @@ SYSTEM = (
     "- SHELTER (tornado, earthquake): destination/direction/distance = null; put the action in "
     "headline_action, unless a specific nearby shelter or open space is a candidate.\n"
     "- Keep language calm, short, and plain. The reader is frightened.\n"
-    "- If an official evacuation order is present, lead with it; your suggestion is secondary.\n\n"
+    "- If an official evacuation order is present, lead with it; your suggestion is secondary.\n"
+    "- Official instructions and on-scene responders (police, firefighters, emergency crews) ALWAYS "
+    "override this plan. If anything you say is contradicted by an official order or by personnel on "
+    "the ground, the user must follow the officials — they can see the situation and have the final "
+    "say. Make this deference explicit where it's relevant.\n\n"
     "CRITICAL tier rule: For PREPARE tier (time_available = 'under 6 hours'), the hazard is NOT "
     "happening right now. Steps must be preparatory actions (gather, check, plan, monitor). "
     "NEVER use words like 'hide', 'take cover', 'shelter now', or 'get to safety' as an immediate "
@@ -608,7 +616,18 @@ RECOVERY_CLEANUP_SYSTEM = (
     "You are a post-disaster RECOVERY assistant. The acute emergency is OVER — the person is "
     "cleaning up and returning to a damaged home. This is NOT a life-safety/evacuation plan. "
     "Output ONLY a valid JSON object, no prose outside it, no code fences.\n\n"
-    "Top-level keys: headline_action (string), confidence (high|medium|low), and a slideshow plan "
+    "CRITICAL FRAMING: the danger has ALREADY PASSED. headline_action MUST be a calm recovery / "
+    "re-entry headline (e.g. 'Return safely and start your clean-up'). It must NEVER be an "
+    "evacuation or life-safety imperative — never 'leave now', 'evacuate', 'flooding is imminent', "
+    "'move to higher ground', 'take cover', or 'get to safety'. If the provided situation text or "
+    "description sounds like an active alert (imminent danger, 'expected within the hour', etc.), "
+    "treat it as the PAST event the person is recovering FROM, not a current threat. Every part of "
+    "the plan — headline, summary, steps — must be about safe return and clean-up, not escaping.\n\n"
+    "Top-level keys: headline_action (string), confidence (high|medium|low), why (array of 5-10 "
+    "short bullet strings, each ≤16 words, plain language, walking through HOW you reached this "
+    "clean-up plan in order — what you weighed about the damage, the hazard-specific risks, the "
+    "sequencing, and any deadlines from an uploaded document — so the reader can follow the "
+    "reasoning and sanity-check it; no jargon, do not just restate the steps), and a slideshow plan "
     "as 'summary' and 'steps' at the TOP LEVEL (NOT nested under 'slideshow_plan').\n"
     "- summary: object with tier_label (short label, e.g. 'Recovery — clean-up & re-entry'), "
     "time_estimate (a calm note on pacing), what_to_do (array of 3-4 short high-level bullets).\n"
@@ -637,7 +656,10 @@ RECOVERY_CLEANUP_SYSTEM = (
     "Ground specifics in the gov_guidance provided (CDC, Ready.gov, FEMA, EPA) — prefer its exact wording "
     "for safety thresholds and do not contradict it. Use the person's reported damage and description to "
     "tailor the plan. If photos are provided, use what they show to make the steps specific. Never tell "
-    "someone a building is safe — defer structural/utility/coverage decisions to professionals.\n\n"
+    "someone a building is safe — defer structural/utility/coverage decisions to professionals. "
+    "Official instructions and on-scene personnel (inspectors, fire/utility crews, officials) ALWAYS "
+    "override this plan; if they contradict a step, the person must follow the officials — they have the "
+    "final say. Make this deference explicit where relevant.\n\n"
     "UPLOADED DOCUMENT: if the context includes 'uploaded_document', the person attached a real insurance, "
     "FEMA, or aid letter that has already been analyzed for you. Weave its specifics into PHASE 4 (and an "
     "earlier phase if a deadline is imminent) instead of generic 'start your claim' advice: name the "
@@ -729,6 +751,8 @@ async def synthesize_cleanup(req, rag_context: str = "", doc_analysis: dict | No
             data["steps"] = fallback["steps"]
         data.setdefault("confidence", "medium")
         data["engine"] = "ai"
+        why = data.get("why")
+        data["why"] = [str(b).strip() for b in why if str(b).strip()] if isinstance(why, list) else []
         return data
     except Exception as exc:
         log.exception("synthesize_cleanup() failed — using fallback: %s", exc)
@@ -1013,7 +1037,6 @@ async def synthesize(req, rag_context: str = "") -> dict:
                 {"role": "system", "content": SYSTEM},
                 {"role": "user", "content": user_msg},
             ],
-            extra_body={"reasoning": {"enabled": True}},
             extra_headers={
                 "HTTP-Referer": "https://crisis-to-action.local",
                 "X-Title": "Crisis-to-Action",
@@ -1072,6 +1095,9 @@ async def synthesize(req, rag_context: str = "") -> dict:
         data["dest_lat"] = dlat
         data["dest_lon"] = dlon
         data["engine"] = "ai"
+        # `why`: the model's own bullet-point reasoning. Keep only clean strings.
+        why = data.get("why")
+        data["why"] = [str(b).strip() for b in why if str(b).strip()] if isinstance(why, list) else []
         return data
     except Exception as exc:
         log.exception("synthesize() raised — falling back to deterministic. Error: %s", exc)

@@ -66,9 +66,9 @@ const STR = {
   },
 };
 
-export default function RecoverCleanupIntake({ hazard, onBack, onGenerate, busy, error, language = "en" }) {
+export default function RecoverCleanupIntake({ hazard, onBack, onGenerate, busy, error, language = "en", initialText = "" }) {
   const [damage, setDamage] = useState([]);
-  const [text, setText] = useState("");
+  const [text, setText] = useState(initialText);
   const [docText, setDocText] = useState("");
   const [docImages, setDocImages] = useState([]); // photos of the letter (data URLs)
   const [images, setImages] = useState([]); // data URLs

@@ -77,7 +77,7 @@ const STR = {
       { name: "At shelter / Arrival", desc: "What to do once you've reached safety or the hazard has passed its peak. Check in, check for injury, stay put until clear." },
       { name: "After", desc: "Recovery. Check for gas, structural damage, and downed lines. Contact family and follow official re-entry guidance." },
     ],
-    s3Body2: "You move through it as a slideshow - one step at a time, each with a rough time estimate and an expandable checklist of concrete actions. Mark steps done as you go.",
+    s3Body2: "You move through it as a slideshow - one step at a time, each with a rough time estimate and an expandable checklist of concrete actions. Mark steps done as you go. Tap \"Why this plan?\" on the summary to see the few short bullets behind the AI's thinking - and a calm reminder that you know your situation best: if a step doesn't match what you're seeing, trust your eyes, follow official instructions and on-scene responders (they have the final say), and call 911 first in a real emergency.",
 
     s4Label: "How much time you have",
     s4Body: "Every alert is sorted into a tier that shapes the whole response:",
@@ -169,7 +169,7 @@ const STR = {
       { name: "À l'abri / Arrivée", desc: "Quoi faire une fois en sécurité ou le danger passé à son pic. Signalez-vous, vérifiez les blessures, restez sur place jusqu'au feu vert." },
       { name: "Après", desc: "Rétablissement. Vérifiez le gaz, les dommages structurels et les lignes tombées. Contactez vos proches et suivez les consignes officielles de retour." },
     ],
-    s3Body2: "Vous le parcourez comme un diaporama — une étape à la fois, chacune avec une estimation de temps approximative et une liste d'actions concrètes dépliable. Cochez les étapes au fur et à mesure.",
+    s3Body2: "Vous le parcourez comme un diaporama — une étape à la fois, chacune avec une estimation de temps approximative et une liste d'actions concrètes dépliable. Cochez les étapes au fur et à mesure. Touchez « Pourquoi ce plan ? » sur le résumé pour voir en quelques puces le raisonnement de l'IA — et un rappel calme : vous connaissez votre situation mieux que quiconque. Si une étape ne correspond pas à ce que vous voyez, fiez-vous à vos yeux, suivez les instructions officielles et les intervenants sur place (ils ont le dernier mot), et appelez le 911 d'abord en cas d'urgence réelle.",
 
     s4Label: "Le temps dont vous disposez",
     s4Body: "Chaque alerte est classée dans un palier qui façonne toute la réponse :",

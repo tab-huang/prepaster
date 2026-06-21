@@ -130,10 +130,12 @@ const C = {
     aiLabel: "AI synthesis",
     aiRows: [
       { k: "Provider", v: <>OpenRouter (OpenAI-compatible), via the <code>openai</code> async SDK</> },
-      { k: "Model", v: <><code>anthropic/claude-sonnet-4-6</code> - configurable via <code>OPENROUTER_MODEL</code>; vision via <code>OPENROUTER_VISION_MODEL</code></> },
+      { k: "Model", v: <><code>google/gemini-3.5-flash</code> - configurable via <code>OPENROUTER_MODEL</code>; vision via <code>OPENROUTER_VISION_MODEL</code> (code-level default <code>anthropic/claude-sonnet-4-6</code>)</> },
       { k: "Call sites", v: <>Vision screenshot parse · Stage-5 plan synthesis · follow-up step/question · plus the Recover flow's <code>synthesize_cleanup</code> · <code>recovery_follow_up</code> · <code>analyze_paperwork</code> · <code>ocr_document_text</code> (photo letter → text). Recovery deadlines use an <strong>LLM-extracts / code-computes</strong> hybrid: the model returns the deadline's structure, <code>reconcile_deadlines</code> does the date math and overrides it.</> },
       { k: "Contract", v: <>Strict JSON + defensive parser; any failure falls back to the deterministic plan (<code>modules.build_plan</code> for response, <code>recovery.*</code> for Recover)</> },
       { k: "Time context", v: <><code>_timing_context()</code> builds minutes-until/since-expiry + active/expired status from the client <code>now</code> and alert <code>expires</code>, so plans ground in real clock time and "do I still have time?" gets a concrete answer</> },
+      { k: "Plan reasoning", v: <>Raw chain-of-thought is <strong>off</strong> (too slow, too long to read under stress). Instead the synthesis prompts return a <code>why</code> array — 5–10 short bullets on <em>how</em> the model reached the plan — inside the same JSON call (no added latency), shown as a collapsed "Why this plan?" section on the summary slide.</> },
+      { k: "User-authority guidelines", v: <>Every plan also shows a collapsed <code>PlanGuidelines</code> card — trust your own eyes and adapt, guidance not a guarantee, stop when unsure, call 911 first, official instructions and on-scene responders override the plan and have the final say, adjust if wrong — trimmed to two lines on the RUN tier.</> },
     ],
 
     recLabel: "Recover — the third act",
@@ -157,7 +159,7 @@ const C = {
     svcLabel: "External data & services",
     svcHead: ["Service", "Used for", "Key?"],
     services: [
-      { svc: "OpenRouter (anthropic/claude-sonnet-4-6)", use: "Vision parse + plan synthesis + follow-up + recovery", key: "Yes", keyLabel: "Yes" },
+      { svc: "OpenRouter (google/gemini-3.5-flash)", use: "Vision parse + plan synthesis + follow-up + recovery", key: "Yes", keyLabel: "Yes" },
       { svc: "NWS api.weather.gov",        use: "Live active alerts (US)", key: "No", keyLabel: "No" },
       { svc: "ECCC GeoMet",                use: "Live active alerts (Canada)", key: "No", keyLabel: "No" },
       { svc: "Open-Meteo Elevation",       use: "High-ground reasoning (flood)", key: "No", keyLabel: "No" },
@@ -182,7 +184,7 @@ const C = {
       { m: "POST", path: "/api/follow-up",         purpose: "Add a plan step or answer a question, RAG-grounded" },
       { m: "POST", path: "/api/recover/cleanup",   purpose: "Recover: clean-up plan; folds in an attached letter's computed deadlines (auto-redacted; OCRs a photo)" },
       { m: "POST", path: "/api/recover/followup",  purpose: "Recover: add a step / answer a question on the clean-up plan" },
-      { m: "POST", path: "/api/recover/paperwork", purpose: "Recover: analyze a letter (auto-redacts, then continues) → computed deadlines, classification, contacts" },
+      { m: "POST", path: "/api/recover/paperwork", purpose: "Recover: analyze a letter (paste or photo/PDF → OCR'd; auto-redacts, then continues) → computed deadlines, classification, contacts" },
       { m: "GET",  path: "/api/demo/live",         purpose: "Find one active disaster now + a point to stand next to" },
       { m: "GET",  path: "/api/demo/live/list",    purpose: "Find up to 5 active disasters now (diversified) for the picker" },
       { m: "POST", path: "/api/demo/live/place",   purpose: "Resolve a real public place to stand at for a chosen live disaster" },
@@ -342,10 +344,12 @@ const C = {
     aiLabel: "Synthèse IA",
     aiRows: [
       { k: "Fournisseur", v: <>OpenRouter (compatible OpenAI), via le SDK asynchrone <code>openai</code></> },
-      { k: "Modèle", v: <><code>anthropic/claude-sonnet-4-6</code> — configurable via <code>OPENROUTER_MODEL</code> ; vision via <code>OPENROUTER_VISION_MODEL</code></> },
+      { k: "Modèle", v: <><code>google/gemini-3.5-flash</code> — configurable via <code>OPENROUTER_MODEL</code> ; vision via <code>OPENROUTER_VISION_MODEL</code> (défaut côté code <code>anthropic/claude-sonnet-4-6</code>)</> },
       { k: "Points d'appel", v: <>Analyse visuelle de la capture · synthèse du plan (étape 5) · étape/question de suivi · plus le flux Rétablir : <code>synthesize_cleanup</code> · <code>recovery_follow_up</code> · <code>analyze_paperwork</code> · <code>ocr_document_text</code> (photo de lettre → texte). Les délais de rétablissement utilisent un modèle <strong>l'IA extrait / le code calcule</strong> : le modèle renvoie la structure du délai, <code>reconcile_deadlines</code> fait le calcul de date et le remplace.</> },
       { k: "Contrat", v: <>JSON strict + analyseur défensif ; tout échec retombe sur le plan déterministe (<code>modules.build_plan</code> pour la réponse, <code>recovery.*</code> pour Rétablir)</> },
       { k: "Contexte temporel", v: <><code>_timing_context()</code> calcule les minutes avant/depuis l'expiration + le statut actif/expiré à partir du <code>now</code> du client et de l'<code>expires</code> de l'alerte, pour que les plans s'ancrent dans l'heure réelle et que « ai-je encore le temps ? » obtienne une réponse concrète</> },
+      { k: "Raisonnement du plan", v: <>La chaîne de pensée brute est <strong>désactivée</strong> (trop lente, trop longue à lire sous stress). Les invites renvoient plutôt un tableau <code>why</code> — 5 à 10 puces brèves sur <em>comment</em> le modèle est arrivé au plan — dans le même appel JSON (aucune latence ajoutée), affiché en section repliée « Pourquoi ce plan ? » sur la diapo de résumé.</> },
+      { k: "Repères pour l'utilisateur", v: <>Chaque plan affiche aussi une carte repliée <code>PlanGuidelines</code> — fiez-vous à vos yeux et adaptez, un guide pas une garantie, arrêtez en cas de doute, appelez le 911 d'abord, les instructions officielles et les intervenants sur place priment sur le plan et ont le dernier mot, ajustez si c'est faux — réduite à deux lignes au palier RUN.</> },
     ],
 
     recLabel: "Rétablir — le troisième acte",
@@ -369,7 +373,7 @@ const C = {
     svcLabel: "Données et services externes",
     svcHead: ["Service", "Utilisé pour", "Clé ?"],
     services: [
-      { svc: "OpenRouter (anthropic/claude-sonnet-4-6)", use: "Analyse visuelle + synthèse du plan + suivi + rétablissement", key: "Yes", keyLabel: "Oui" },
+      { svc: "OpenRouter (google/gemini-3.5-flash)", use: "Analyse visuelle + synthèse du plan + suivi + rétablissement", key: "Yes", keyLabel: "Oui" },
       { svc: "NWS api.weather.gov",        use: "Alertes actives en direct (US)", key: "No", keyLabel: "Non" },
       { svc: "ECCC GeoMet",                use: "Alertes actives en direct (Canada)", key: "No", keyLabel: "Non" },
       { svc: "Open-Meteo Elevation",       use: "Raisonnement sur les hauteurs (inondation)", key: "No", keyLabel: "Non" },
@@ -394,7 +398,7 @@ const C = {
       { m: "POST", path: "/api/follow-up",         purpose: "Ajouter une étape ou répondre à une question, fondé sur le RAG" },
       { m: "POST", path: "/api/recover/cleanup",   purpose: "Rétablir A : plan diaporama de nettoyage / retour (RAG de rétablissement + IA, repli déterministe)" },
       { m: "POST", path: "/api/recover/followup",  purpose: "Rétablir A : ajouter une étape / répondre à une question sur le plan de nettoyage" },
-      { m: "POST", path: "/api/recover/paperwork", purpose: "Rétablir : analyser une lettre (caviardage automatique, puis continue) → délais calculés, classification, contacts" },
+      { m: "POST", path: "/api/recover/paperwork", purpose: "Rétablir : analyser une lettre (collée ou photo/PDF → OCR ; caviardage automatique, puis continue) → délais calculés, classification, contacts" },
       { m: "GET",  path: "/api/demo/live",         purpose: "Trouver une catastrophe active maintenant + un point où se placer" },
       { m: "GET",  path: "/api/demo/live/list",    purpose: "Trouver jusqu'à 5 catastrophes actives (diversifiées) pour le sélecteur" },
       { m: "POST", path: "/api/demo/live/place",   purpose: "Résoudre un lieu public réel où se placer pour une catastrophe en direct choisie" },

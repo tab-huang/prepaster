@@ -139,6 +139,15 @@ US + Canada; falls back sensibly elsewhere).
   vector, candidate buildings, the chosen destination, and a real road route (OSRM). The
   "you are here" marker shows a **live facing cone** from the device compass, so a "head
   north-east" instruction maps to a direction you can physically see.
+- **"Why this plan?" reasoning** - a collapsed-by-default section on the summary slide showing the
+  model's own 5-10 bullet rationale for how it reached the plan, so the user can follow the logic
+  and sanity-check it against what they're actually seeing. No slow chain-of-thought stream - it's
+  generated inside the same JSON call as the plan.
+- **"You know your situation best" guidelines** - a collapsed, calm reminder card shown with every
+  plan: trust your eyes and adapt a step that doesn't fit, treat it as guidance not a guarantee,
+  stop when unsure, call 911 first in a life-threatening emergency, **official instructions and
+  on-scene responders override the plan and have the final say**, and adjust the plan if something's
+  wrong. Trimmed to two lines on the RUN-tier card.
 - **"Ask anything" assistant** - a Q&A box with tappable suggestion chips ("How much time do I
   have?", "What should I bring?") plus free-text questions ("Is it safe to use the elevator?"),
   answered concise and RAG-grounded without regenerating the plan.
@@ -337,7 +346,8 @@ handoff. See [Recovery](#recovery-after-the-danger-passes).
   `steps` slideshow plan.
 - `Recommendation` - the final plan: `{headline_action, destination_name, direction, distance,
   reason, supplies_enroute, confidence, uncertainty_note, official_order_*, dest_lat, dest_lon,
-  responsePattern, engine, summary, steps}`.
+  responsePattern, engine, summary, steps, why}` (`why` = the model's 5-10 bullet reasoning;
+  empty on the deterministic fallback).
 
 ---
 
@@ -410,7 +420,7 @@ usaii/
 │           ├── TechnicalDocs.jsx  Full system spec rendered as a page (visual diagrams)
 │           ├── RecoverHub.jsx    Recover flow: pick the hazard → clean-up guide + assistant
 │           ├── RecoverCleanupIntake.jsx  Recover intake: damage, notes, photos, + an insurance/aid letter (paste/photo) → plan
-│           ├── PaperworkBox.jsx  Optional standalone letter-analysis box (paste → structured result)
+│           ├── PaperworkBox.jsx  Optional standalone letter-analysis box (paste, photo, or PDF → structured result)
 │           ├── PaperworkResult.jsx  Shared renderer: computed deadline cards, classification, contacts
 │           ├── RecoverPaperwork.jsx  Former standalone paperwork page (dormant; superseded by assistant + box)
 │           ├── StartScreen.jsx   Demo config: synthetic-alert / real-active-disaster toggle
@@ -419,7 +429,8 @@ usaii/
 │           ├── NotificationCard.jsx  Alert preview (demo: generated-vs-real screenshot compare)
 │           ├── ResourceCheck.jsx     Stage 3 one-tap questions
 │           ├── RunGuidance.jsx       RUN-tier instant life-safety card
-│           ├── Slideshow.jsx         Step-by-step plan with phases + checklists
+│           ├── Slideshow.jsx         Step-by-step plan with phases + checklists, "Why this plan?" reasoning, guidelines
+│           ├── PlanGuidelines.jsx    "How to use this plan" reminder card (full + RUN-tier compact)
 │           ├── CrisisMap.jsx         Leaflet map: tiles, overlays, route
 │           ├── QuestionsBox.jsx      "Ask anything" assistant: robot mark, suggestion chips, optional letter analysis
 │           ├── ConcernsBox.jsx       Plan-update note → regenerate
@@ -460,8 +471,9 @@ usaii/
   carries `now`, `expires`, and a human `planAge`), `Recommendation`, and the three **Recover**
   schemas (`CleanupRequest` - hazard + damage categories + free text + capped damage photos +
   **`documentText` / `documentImages` / `now`** for an attached insurance/aid letter;
-  `RecoveryFollowUpRequest`; `PaperworkRequest` - capped document text + insurer/claim status +
-  `now`). Every free-text, image, and list field is length/size-capped so no endpoint can be abused
+  `RecoveryFollowUpRequest`; `PaperworkRequest` - capped document text + **`documentImages`** (photo/
+  PDF pages of the letter, OCR'd to text) + insurer/claim status + `now`). Every free-text, image,
+  and list field is length/size-capped so no endpoint can be abused
   as a free vision proxy or to inflate prompt cost.
 - **`hazards.py`** - `detect_hazard()` maps an NWS event string to one of the four hazards via a
   keyword table (`"red flag"`/`"fire"` → wildfire, etc.); `response_pattern()` maps a hazard to
@@ -616,7 +628,11 @@ module reasons from the epicentre and proximity instead.
 - **`Slideshow.jsx`** - Summary slide + one slide per step, progress dots, "mark done"
   tracking, the "Need more guidance?" add-step panel, and the plan-updated badge. Each slide has a
   **read-aloud** button, and the add-step box has a **voice-dictation** mic; navigating away or
-  between slides cancels narration.
+  between slides cancels narration. The summary slide also carries the collapsed **"Why this plan?"**
+  reasoning section (the model's `rec.why` bullets) and the **`PlanGuidelines`** reminder card.
+- **`PlanGuidelines.jsx`** - the calm "how to use this plan" reminder card (you-know-best, guidance-
+  not-guarantee, stop-when-unsure, call-911, officials-and-responders-have-final-say, adjust-if-wrong). Renders a
+  collapsible 6-point card under the plan summary, or a trimmed two-line variant on the RUN tier.
 - **`i18n.js` / `speech.js` / `MicButton.jsx`** - The accessibility layer. `i18n.js` is the EN/FR
   string table behind `makeT(lang)` (with `{var}` interpolation, falling back EN → key).
   `speech.js` wraps Web Speech: `speak()` / `stopSpeaking()` for read-aloud (TTS, broad support)
@@ -642,9 +658,11 @@ module reasons from the epicentre and proximity instead.
   free-text note, optional damage photos, **and an optional insurance/FEMA/aid letter** (paste, or
   upload a photo via the corner button), then hits `/api/recover/cleanup`. The result page renders
   the plan through the same `Slideshow`, the **"Ask anything" recovery assistant**, and a standalone
-  `PaperworkBox` (paste or analyze a letter → structured result via `PaperworkResult`: the computed
-  deadline cards with urgency, classification, classified contacts). Auto-redaction of sensitive data
-  is surfaced as a notice rather than blocking. (`RecoverPaperwork.jsx` is the former standalone page,
+  `PaperworkBox` (**paste, photograph, or upload a PDF** of a letter → structured result via
+  `PaperworkResult`: the computed deadline cards with urgency, classification, classified contacts).
+  The box now matches the intake's letter upload - a photo/PDF is OCR'd to text (`ai.ocr_document_text`)
+  before the same redact/extract pipeline runs. Auto-redaction of sensitive data is surfaced as a
+  notice rather than blocking. (`RecoverPaperwork.jsx` is the former standalone page,
   now superseded by the assistant + box and left dormant.) Recover phases live in `App.jsx` and keep
   `recoverHazard` apart from the response flow's `hazardType` so the two can't cross-contaminate.
 - **`QuestionsBox.jsx`** - the **"Ask anything" assistant**: a chat-style box with a robot mark,
@@ -671,9 +689,22 @@ module reasons from the epicentre and proximity instead.
 
 ### AI
 - **Provider** - OpenRouter (OpenAI-compatible API), via the `openai` async SDK.
-- **Model** - `nex-agi/nex-n2-pro:free` (configurable via `OPENROUTER_MODEL`; vision via
-  `OPENROUTER_VISION_MODEL`, defaults to the same model). Reasoning enabled on the synthesis
-  call.
+- **Model** - `google/gemini-3.5-flash` (configurable via `OPENROUTER_MODEL`; vision via
+  `OPENROUTER_VISION_MODEL`, defaults to the same model; the code-level fallback default is
+  `anthropic/claude-sonnet-4.6`).
+- **Reasoning is OFF; the plan explains itself instead.** Rather than streaming slow, verbose
+  chain-of-thought tokens a frightened user has no time to read, the synthesis prompts ask the
+  model to return a **`why`** array - 5-10 short, skimmable bullets walking through *how* it
+  reached the plan (facts weighed, hazard/tier logic, trade-offs, any document deadlines). It
+  rides inside the single existing JSON call, so it adds no extra latency, and the frontend
+  renders it as a collapsed-by-default "Why this plan?" section on the summary slide (for both
+  the response and Recover plans). Empty/absent on the deterministic fallback, where it hides itself.
+- **"You know your situation best" guidelines.** Every plan also carries a collapsed, calm
+  reminder card (`PlanGuidelines.jsx`): trust your own eyes and adapt a step that doesn't match
+  what you see, treat the plan as guidance not a guarantee, stop when unsure about safety, call
+  911 first in a life-threatening emergency, follow official instructions and on-scene responders
+  over the app (they have the final say), and adjust the
+  plan if something's wrong. A trimmed two-line variant appears on the RUN-tier card.
 - **Seven call sites** - the response flow's vision screenshot parse, Stage-5 plan synthesis, and
   follow-up step/question; plus the Recover flow's `synthesize_cleanup`, `recovery_follow_up`,
   `analyze_paperwork`, and `ocr_document_text` (vision OCR of a photographed letter → plain text
@@ -804,7 +835,7 @@ SDK for OpenRouter), `pydantic` v2, `python-dotenv`. Standard library: `asyncio`
 
 | Service | Used for | Key? |
 |---|---|---|
-| OpenRouter (`nex-agi/nex-n2-pro:free`) | Vision parse + plan synthesis + follow-up | Yes |
+| OpenRouter (`google/gemini-3.5-flash`) | Vision parse + plan synthesis + follow-up | Yes |
 | NWS `api.weather.gov` | Live active alerts (US) | No |
 | ECCC GeoMet `api.weather.gc.ca` | Live active alerts (Canada, city-page warnings) | No |
 | Open-Meteo Elevation | High-ground reasoning (flood) | No |
@@ -863,7 +894,7 @@ Backend reads from `backend/.env`:
 | Variable | Required | Purpose |
 |---|---|---|
 | `OPENROUTER_API_KEY` | For AI features | Enables vision parse + AI synthesis + follow-up. Without it, the app uses the deterministic engine only (and the screenshot path is disabled, since it must read an image). |
-| `OPENROUTER_MODEL` | No (default `nex-agi/nex-n2-pro:free`) | Override the synthesis/follow-up model. |
+| `OPENROUTER_MODEL` | No (default `anthropic/claude-sonnet-4.6`; deployed config uses `google/gemini-3.5-flash`) | Override the synthesis/follow-up model. |
 | `OPENROUTER_VISION_MODEL` | No (defaults to `OPENROUTER_MODEL`) | Override the screenshot-reading model. |
 | `FIRMS_MAP_KEY` | No | Enables live NASA FIRMS fire detections; without it the wildfire demo uses seeded fires. |
 | `CORS_ALLOW_ORIGINS` | No | Comma-separated allowed origins for CORS. Defaults to the known frontends (Vercel site + localhost dev). |
@@ -886,7 +917,7 @@ engine and seeded demo data.
 | `POST` | `/api/follow-up` | Add a plan step (`mode=instruction`) or answer a question (`mode=question`), RAG-grounded |
 | `POST` | `/api/recover/cleanup` | Recover: clean-up / re-entry slideshow plan; folds in an attached letter's computed deadlines (auto-redacted; OCRs a photo) |
 | `POST` | `/api/recover/followup` | Recover: add a step / answer a question on the clean-up plan, RAG-grounded |
-| `POST` | `/api/recover/paperwork` | Recover: analyze an insurance/FEMA/aid letter (auto-redacts sensitive data, then continues) → computed deadlines, classification, contacts |
+| `POST` | `/api/recover/paperwork` | Recover: analyze an insurance/FEMA/aid letter (paste or photo/PDF → OCR'd; auto-redacts sensitive data, then continues) → computed deadlines, classification, contacts |
 | `GET` | `/api/demo/live` | Simulate flow: find **one** active disaster now + a point to stand next to |
 | `GET` | `/api/demo/live/list` | Simulate flow: find **up to 5** active disasters now (diversified) for the picker |
 | `POST` | `/api/demo/live/place` | Simulate flow: resolve a real public place to stand at for a chosen live disaster |
